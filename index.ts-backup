@@ -1,0 +1,45 @@
+import * as aws from "@pulumi/aws";
+import * as pulumi from "@pulumi/pulumi";
+
+// Load configuration
+const config = new pulumi.Config();
+const domainName = config.require("domainName");
+const certificateArn = config.require("certificateArn");
+
+// Create an S3 bucket for static website hosting
+const siteBucket = new aws.s3.Bucket("siteBucket", {
+    website: { indexDocument: "index.html" },
+});
+
+// Create an Origin Access Identity (OAI) for CloudFront
+const oai = new aws.cloudfront.OriginAccessIdentity("oai");
+
+// Configure CloudFront distribution
+const cdn = new aws.cloudfront.Distribution("cdn", {
+    enabled: true,
+    origins: [{
+        domainName: siteBucket.bucketRegionalDomainName, // ✅ Use correct S3 domain name
+        originId: siteBucket.id,
+        s3OriginConfig: { originAccessIdentity: oai.cloudfrontAccessIdentityPath },
+    }],
+    defaultCacheBehavior: {
+        viewerProtocolPolicy: "redirect-to-https",
+        allowedMethods: ["GET", "HEAD"],
+        cachedMethods: ["GET", "HEAD"],
+        targetOriginId: siteBucket.id,
+        forwardedValues: { queryString: false, cookies: { forward: "none" } },
+    },
+    viewerCertificate: {
+        acmCertificateArn: certificateArn,
+        sslSupportMethod: "sni-only",
+    },
+    restrictions: {
+        geoRestriction: {
+            restrictionType: "none",
+        },
+    }, // Fixed missing closing brace
+});
+
+// Export outputs
+export const bucketName = siteBucket.bucket;
+export const cloudFrontUrl = cdn.domainName;

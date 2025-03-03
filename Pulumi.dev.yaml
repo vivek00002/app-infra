@@ -1,0 +1,4 @@
+config:
+  aws:region: us-east-1
+  test:domainName: yourdomain.tk
+  test:certificateArn: arn:aws:acm:us-east-1:528757806896:certificate/f5eeb3c5-2414-40f4-a725-1c92ed09803d
