@@ -13,7 +13,6 @@ const siteBucket = new aws.s3.Bucket("siteBucket", {
     forceDestroy: true, // Allows re-creating the bucket if needed
 });
 
-// Upload `index.html` to S3 **without ACL**
 const indexHtml = new aws.s3.BucketObject("indexHtml", {
     bucket: siteBucket,
     source: new pulumi.asset.FileAsset("index.html"),
@@ -63,6 +62,6 @@ const cdn = new aws.cloudfront.Distribution("cdn", {
     },
 });
 
-// Export outputs
+// outputs
 export const bucketName = siteBucket.bucket;
 export const cloudFrontUrl = cdn.domainName;
